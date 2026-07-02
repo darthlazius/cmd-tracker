@@ -210,6 +210,54 @@ function saveCommand(command) {
 }
 
 /*
+ * saveCommands() — bulk version of saveCommand() for importing many
+ * commands at once (e.g. `tracker import`)
+ *
+ * saveCommand() reads + rewrites the whole file on every call, which is
+ * fine for a single `tracker save` but becomes O(n) file I/O for n
+ * commands when called in a loop. This reads once, applies every
+ * command in memory, and writes once.
+ *
+ * @param {string[]} commands — terminal commands to save
+ * @returns {object} — { savedCount, duplicateCount }
+ */
+function saveCommands(commands) {
+  const data = readCommands();
+  let savedCount = 0;
+  let duplicateCount = 0;
+
+  for (const command of commands) {
+    if (!command || !command.trim()) {
+      continue;
+    }
+
+    const cleanCommand = command.trim();
+    const category = categorize(cleanCommand);
+
+    const isDuplicate = data[category].some(
+      (item) => item.command === cleanCommand
+    );
+
+    if (isDuplicate) {
+      duplicateCount++;
+      continue;
+    }
+
+    data[category].push({
+      command: cleanCommand,
+      time: new Date().toISOString(),
+    });
+    savedCount++;
+  }
+
+  if (savedCount > 0) {
+    fs.writeFileSync(COMMANDS_FILE, JSON.stringify(data, null, 2));
+  }
+
+  return { savedCount, duplicateCount };
+}
+
+/*
  * toggleFavorite() — marks/unmarks a command as favorite
  *
  * @param {string} command — the command to favorite
@@ -290,6 +338,7 @@ module.exports = {
   initStorage,
   readCommands,
   saveCommand,
+  saveCommands,
   toggleFavorite,
   getFavorites,
   TRACKER_DIR,

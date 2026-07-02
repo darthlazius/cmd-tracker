@@ -19,7 +19,7 @@ const {
   parseFishHistory
 } = require('../utils/shellHistory');
 const { readBookmark, writeBookmark } = require('../utils/bookmark');
-const { saveCommand } = require('../utils/storage');
+const { saveCommands } = require('../utils/storage');
 
 function importCommand() {
 
@@ -62,18 +62,7 @@ function importCommand() {
     result = parseFishHistory(lines, bookmark.last_imported_timestamp);
   }
 
-  let savedCount = 0;
-  let duplicateCount = 0;
-
-  for (const command of result.commands) {
-    const saveResult = saveCommand(command);
-    if (saveResult.saved) {
-      savedCount++;
-    }
-    else {
-      duplicateCount++;
-    }
-  }
+  const { savedCount, duplicateCount } = saveCommands(result.commands);
 
   writeBookmark({
     last_processed_line: result.lastProcessedLine !== undefined
