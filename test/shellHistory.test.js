@@ -28,15 +28,25 @@ test('parseBashHistory filters blank lines and stray comment lines', () => {
   assert.deepStrictEqual(result.commands, ['ls', 'git status']);
 });
 
-test('parseZshHistory (EXTENDED_HISTORY) returns only commands newer than the bookmarked timestamp', () => {
+test('parseZshHistory (EXTENDED_HISTORY) returns commands at or after the bookmarked timestamp', () => {
   const lines = [
     ': 1700000000:0;ls -la',
     ': 1700000050:0;git status',
     ': 1700000100:0;npm install'
   ];
   const result = parseZshHistory(lines, 1700000050, 0);
-  assert.deepStrictEqual(result.commands, ['npm install']);
+  assert.deepStrictEqual(result.commands, ['git status', 'npm install']);
   assert.strictEqual(result.lastImportedTimestamp, 1700000100);
+});
+
+test('parseZshHistory replays a command sharing the bookmarked second instead of dropping it', () => {
+  // two commands landed in the same epoch second as the bookmark itself
+  const lines = [
+    ': 1700000100:0;npm install',
+    ': 1700000100:0;npm test'
+  ];
+  const result = parseZshHistory(lines, 1700000100, 0);
+  assert.deepStrictEqual(result.commands, ['npm install', 'npm test']);
 });
 
 test('parseZshHistory falls back to line-count when EXTENDED_HISTORY is not enabled', () => {
@@ -46,7 +56,7 @@ test('parseZshHistory falls back to line-count when EXTENDED_HISTORY is not enab
   assert.strictEqual(result.lastProcessedLine, 3);
 });
 
-test('parseFishHistory returns only cmd entries newer than the bookmarked timestamp, ignoring paths blocks', () => {
+test('parseFishHistory returns cmd entries at or after the bookmarked timestamp, ignoring paths blocks', () => {
   const lines = [
     '- cmd: ls -la',
     '  when: 1700000000',
@@ -58,6 +68,17 @@ test('parseFishHistory returns only cmd entries newer than the bookmarked timest
     '  when: 1700000200'
   ];
   const result = parseFishHistory(lines, 1700000100);
-  assert.deepStrictEqual(result.commands, ['npm test']);
+  assert.deepStrictEqual(result.commands, ['git status', 'npm test']);
   assert.strictEqual(result.lastImportedTimestamp, 1700000200);
+});
+
+test('parseFishHistory replays a command sharing the bookmarked second instead of dropping it', () => {
+  const lines = [
+    '- cmd: npm install',
+    '  when: 1700000100',
+    '- cmd: npm test',
+    '  when: 1700000100'
+  ];
+  const result = parseFishHistory(lines, 1700000100);
+  assert.deepStrictEqual(result.commands, ['npm install', 'npm test']);
 });

@@ -76,7 +76,7 @@ function parseZshHistory(lines, lastProcessedTimestamp, lastProcessedLine) {
     const timestamp = parseInt(match[1], 10);
     const command = match[2];
 
-    if (timestamp > lastProcessedTimestamp) {
+    if (timestamp >= lastProcessedTimestamp) {
       newCommands.push(command);
       if (timestamp > newestTimestamp) {
         newestTimestamp = timestamp;
@@ -103,7 +103,7 @@ function parseFishHistory(lines, lastProcessedTimestamp) {
     else if (line.startsWith('  when: ') && currentCommand !== null) {
       const timestamp = parseInt(line.slice('  when: '.length), 10);
 
-      if (timestamp > lastProcessedTimestamp) {
+      if (timestamp >= lastProcessedTimestamp) {
         commands.push(currentCommand);
         if (timestamp > newestTimestamp) {
           newestTimestamp = timestamp;

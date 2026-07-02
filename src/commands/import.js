@@ -8,7 +8,7 @@
  * NEW entries instead of re-scanning the whole history file every time
  */
 
-const fs = require('fs');
+const fs = require('node:fs');
 const colors = require('../utils/colors');
 const { isInitialized, showInitError } = require('../utils/validator');
 const { detectShell } = require('../utils/hook');

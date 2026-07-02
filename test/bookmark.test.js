@@ -43,3 +43,12 @@ test('writeBookmark then readBookmark round-trips data', () => {
   assert.strictEqual(result.last_processed_line, 42);
   assert.strictEqual(result.last_imported_timestamp, 1700000000);
 });
+
+test('readBookmark falls back to defaults when meta.json is corrupted', () => {
+  const metaFile = path.join(tempDir, '.tracker', 'meta.json');
+  fs.mkdirSync(path.dirname(metaFile), { recursive: true });
+  fs.writeFileSync(metaFile, '{ this is not valid json');
+
+  const result = bookmark.readBookmark();
+  assert.deepStrictEqual(result, bookmark.getDefaultBookmark());
+});
