@@ -14,7 +14,8 @@ function getHistoryFilePath() {
     history_path = path.join(home, '.zsh_history');
   }
   else if (shell == 'fish') {
-    history_path = path.join(home, '.local/share/fish/fish_history');
+    const dataHome = process.env.XDG_DATA_HOME || path.join(home, '.local/share');
+    history_path = path.join(dataHome, 'fish/fish_history');
   }
   else {
     return null;
